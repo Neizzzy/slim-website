@@ -1,0 +1,23 @@
+<h1>Users Page</h1>
+<a href="/">Home Page</a>
+<hr>
+<form action="/users" method="get">
+    <input type="search" name="term" placeholder="Name..." value="<?=htmlspecialchars($term);?>">
+    <input type="submit" value="Search">
+</form>
+<hr>
+<a href="/users/new">+ New User</a>
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($users as $user): ?>
+        <tr>
+            <td><?= htmlspecialchars($user); ?></td>
+        </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
