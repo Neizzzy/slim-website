@@ -1,0 +1,25 @@
+<h1>Update User</h1>
+<a href="/users">Users Page</a>
+<hr>
+<form action="/users/<?= htmlspecialchars($user['id']); ?>" method="post">
+    <input type="hidden" name="_METHOD" value="PATCH">
+    <div>
+        <label>
+            Nickname:
+            <input type="text" name="user[nickname]" value="<?= htmlspecialchars($user['nickname']); ?>">
+        </label>
+        <?php if (isset($errors['nickname'])): ?>
+            <div><?= $errors['nickname']; ?></div>
+        <?php endif; ?>
+    </div>
+    <div>
+        <label>
+            Email:
+            <input type="email" name="user[email]" value="<?= htmlspecialchars($user['email']); ?>">
+        </label>
+        <?php if (isset($errors['email'])): ?>
+            <div><?= $errors['email']; ?></div>
+        <?php endif; ?>
+    </div>
+    <input type="submit" value="Update user">
+</form>

@@ -1,0 +1,10 @@
+<h1>Delete User</h1>
+<a href="/users">Users Page</a>
+
+<h2>Are you Sure? You won't be able to revert this!</h2>
+<h3>You want to delete user | id: <?= htmlspecialchars($user['id']);?> nickname: <?= htmlspecialchars($user['nickname']); ?></h3>
+<form action="/users/<?= htmlspecialchars($user['id']); ?>" method="post">
+    <input type="hidden" name="_METHOD" value="DELETE">
+    <input type="submit" value="Delete">
+</form>
+<a href="/users">Cancel</a>
