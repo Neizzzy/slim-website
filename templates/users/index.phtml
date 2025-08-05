@@ -1,22 +1,36 @@
 <h1>Users Page</h1>
+<?php if (isset($flash['success'])): ?>
+    <?php foreach ($flash['success'] as $message): ?>
+        <div><p style="color: green"><?= $message; ?></p></div>
+    <?php endforeach; ?>
+<?php endif; ?>
 <a href="/">Home Page</a>
 <hr>
 <form action="/users" method="get">
     <input type="search" name="term" placeholder="Name..." value="<?=htmlspecialchars($term);?>">
     <input type="submit" value="Search">
 </form>
+<a href="/users">Clear</a>
 <hr>
 <a href="/users/new">+ New User</a>
 <table>
     <thead>
         <tr>
-            <th>Name</th>
+            <th>Id</th>
+            <th>Nickname</th>
+            <th>Action</th>
         </tr>
     </thead>
     <tbody>
         <?php foreach ($users as $user): ?>
         <tr>
-            <td><?= htmlspecialchars($user); ?></td>
+            <td><?= htmlspecialchars($user['id']); ?></td>
+            <td><?= htmlspecialchars($user['nickname']); ?></td>
+            <td>
+                <a href="/users/<?= htmlspecialchars($user['id']); ?>">Open</a>
+                <a href="/users/<?= htmlspecialchars($user['id']); ?>/edit">Edit</a>
+                <a href="/users/<?= htmlspecialchars($user['id']); ?>/delete">Delete</a>
+            </td>
         </tr>
         <?php endforeach; ?>
     </tbody>
