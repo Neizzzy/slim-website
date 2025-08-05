@@ -2,17 +2,28 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Slim\Factory\AppFactory;
+use App\Repository\UserRepository;
+use App\Validator\UserValidator;
 use DI\Container;
+use Slim\Factory\AppFactory;
+use Slim\Middleware\MethodOverrideMiddleware;
+use Slim\Views\PhpRenderer;
 
-$users = ['mike', 'Mishel', 'adel', 'keks', 'kamila'];
+session_start();
+
+$userRepo = new UserRepository(__DIR__ . '/../assets/users.json');
 
 $container = new Container();
 $container->set('renderer', function () {
-    return new \Slim\Views\PhpRenderer(__DIR__ . '/../templates');
+    return new PhpRenderer(__DIR__ . '/../templates');
 });
+$container->set('flash', function () {
+    return new Slim\Flash\Messages();
+});
+
 $app = AppFactory::createFromContainer($container);
 $app->addErrorMiddleware(true, true, true);
+$app->add(MethodOverrideMiddleware::class);
 
 $router = $app->getRouteCollector()->getRouteParser();
 
@@ -21,13 +32,16 @@ $app->get('/', function ($request, $response) use ($router) {
     return $this->get('renderer')->render($response, 'index.phtml', $params);
 })->setName('index');
 
-$app->get('/users', function ($request, $response) use ($users) {
+$app->get('/users', function ($request, $response) use ($userRepo) {
+    $messages = $this->get('flash')->getMessages();
     $term = mb_strtolower(trim($request->getQueryParam('term')));
+    $users = $userRepo->all();
+
     $filteredUsers = $term === ''
         ? $users
-        : array_filter($users, fn($user) => str_contains(mb_strtolower($user), $term));
+        : array_filter($users, fn($user) => str_contains(mb_strtolower($user['nickname']), $term));
 
-    $params = ['users' => $filteredUsers, 'term' => $term];
+    $params = ['users' => $filteredUsers, 'term' => $term, 'flash' => $messages];
     return $this->get('renderer')->render($response, 'users/index.phtml', $params);
 })->setName('users.index');
 
@@ -42,52 +56,94 @@ $app->get('/users/new', function ($request, $response) {
     return $this->get('renderer')->render($response, 'users/new.phtml', $params);
 })->setName('users.create');
 
-$app->post('/users', function ($request, $response) {
+$app->post('/users', function ($request, $response) use ($userRepo, $router) {
     $user = $request->getParsedBodyParam('user');
-
-    $errors = [];
-    if (empty($user['nickname'])) {
-        $errors['nickname'] = "Field 'nickname' is required";
-    }
-    if (empty($user['email'])) {
-        $errors['email'] = "Field 'email' is required";
-    }
+    $validator = new UserValidator();
+    $errors = $validator->validate($user);
 
     if (count($errors) === 0) {
-        $file = __DIR__ . '/../assets/users.json';
-        if (!file_exists($file)) {
-            die("Файл не существует");
-        }
-        $users = json_decode(file_get_contents($file), true, flags: JSON_OBJECT_AS_ARRAY);
-
-        $id = 1;
-        if (isset($users)) {
-            $lastUser = end($users);
-            $id += $lastUser['id'];
-        }
-        $user['id'] = $id;
-
-        $users[] = $user;
-
-        $result = file_put_contents($file, json_encode($users));
-        if ($result === false) {
-            die("Ошибка записи в файл");
-        }
-
-        return $response->withRedirect('/users', 302);
+        $userRepo->create($user);
+        $this->get('flash')->addMessage('success', 'User was added successfully');
+        $url = $router->urlFor('users.index');
+        return $response->withRedirect($url, 302);
     }
 
     $params = [
         'user' => $user,
         'errors' => $errors
     ];
-    return $this->get('renderer')->render($response, 'users/new.phtml', $params)->withStatus(422);
+    return $this->get('renderer')->render($response->withStatus(422), 'users/new.phtml', $params);
 })->setName('users.store');
 
-$app->get('/users/{id}', function ($request, $response, array $args) {
-    $params = ['id' => $args['id'], 'nickname' => 'user-' . $args['id']];
+$app->get('/users/{id}', function ($request, $response, array $args) use ($userRepo) {
+    $id = $args['id'];
 
+    $user = $userRepo->findById($id);
+    if (!$user) {
+        return $response->write('User not found!')->withStatus(404);
+    }
+
+    $params = ['user' => $user];
     return $this->get('renderer')->render($response, 'users/show.phtml', $params);
 })->setName('users.show');
+
+$app->get('/users/{id}/edit', function ($request, $response, array $args) use ($userRepo) {
+    $id = $args['id'];
+    $user = $userRepo->findById($id);
+    if (!$user) {
+        return $response->write('User not found!')->withStatus(404);
+    }
+
+    $params = [
+        'user' => $user,
+        'errors' => []
+    ];
+    return $this->get('renderer')->render($response, 'users/edit.phtml', $params);
+})->setName('users.edit');
+
+$app->patch('/users/{id}', function ($request, $response, array $args) use ($userRepo, $router) {
+    $id = $args['id'];
+    $data = $request->getParsedBodyParam('user');
+    $validator = new UserValidator;
+    $errors = $validator->validate($data);
+
+    if (count($errors) === 0) {
+        $userRepo->update($id, $data);
+        $url = $router->urlFor('users.index');
+        $this->get('flash')->addMessage('success', 'User was updated successfully');
+        return $response->withRedirect($url, 302);
+    }
+
+    $user = $userRepo->findById($id);
+    if (!$user) {
+        return $response->write('User not found!')->withStatus(404);
+    }
+    $params = [
+        'user' => $user,
+        'errors' => $errors
+    ];
+    return $this->get('renderer')->render($response, 'users/edit.phtml', $params);
+})->setName('users.update');
+
+$app->get('/users/{id}/delete', function ($request, $response, array $args) use ($userRepo) {
+    $id = $args['id'];
+    $user = $userRepo->findById($id);
+    if (!$user) {
+        return $response->write('User not found!')->withStatus(404);
+    }
+
+    $params = [
+        'user' => $user
+    ];
+    return $this->get('renderer')->render($response, 'users/delete.phtml', $params);
+});
+
+$app->delete('/users/{id}', function ($request, $response, array $args) use ($userRepo, $router) {
+    $id = $args['id'];
+    $userRepo->destroy($id);
+
+    $this->get('flash')->addMessage('success', 'User was deleted successfully');
+    return $response->withRedirect($router->urlFor('users.index'), 302);
+});
 
 $app->run();
