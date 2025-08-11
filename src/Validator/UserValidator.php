@@ -10,6 +10,9 @@ class UserValidator
         if (empty($user['nickname'])) {
             $errors['nickname'] = "Field 'Nickname' can't be blank!";
         }
+        if (filter_var($user['email'], FILTER_VALIDATE_EMAIL) === false) {
+            $errors['email'] = "Filed 'Email' with wrong format!";
+        }
         if (empty($user['email'])) {
             $errors['email'] = "Field 'Email' can't be blank!";
         }
