@@ -15,7 +15,7 @@
     <div>
         <label>
             Email:
-            <input type="email" name="user[email]" value="<?= htmlspecialchars($user['email']); ?>">
+            <input type="text" name="user[email]" value="<?= htmlspecialchars($user['email']); ?>">
         </label>
         <?php if (isset($errors['email'])): ?>
             <div><?= $errors['email']; ?></div>
