@@ -131,7 +131,7 @@ $app->group('/users', function (RouteCollectorProxy $users) use ($router) {
         if (count($errors) === 0) {
             $users = getUsers($request);
             $id = 1;
-            if (isset($users)) {
+            if ($users) {
                 $lastUser = end($users);
                 $id += $lastUser['id'];
             }
