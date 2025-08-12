@@ -1,0 +1,10 @@
+<h1>Delete Car</h1>
+<a href="/cars">Cars Page</a>
+
+<h2>Are you Sure? You won't be able to revert this!</h2>
+<h3>You want to delete car | id: <?= htmlspecialchars($car->getId());?> Make Model: <?= htmlspecialchars($car->getMake()); ?> <?= htmlspecialchars($car->getModel()); ?></h3>
+<form action="/cars/<?= htmlspecialchars($car->getId()); ?>" method="post">
+    <input type="hidden" name="_METHOD" value="DELETE">
+    <input type="submit" value="Delete">
+</form>
+<a href="/cars">Cancel</a>

@@ -1,0 +1,33 @@
+<h1>Cars Page</h1>
+<?php if (isset($flash['success'])): ?>
+    <?php foreach ($flash['success'] as $message): ?>
+        <div><p style="color: green"><?= $message; ?></p></div>
+    <?php endforeach; ?>
+<?php endif; ?>
+<a href="/">Home Page</a>
+<hr>
+<a href="/cars/new">+ New Car</a>
+<table>
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Make</th>
+            <th>Model</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($cars as $car): ?>
+        <tr>
+            <td><?= htmlspecialchars($car->getId()); ?></td>
+            <td><?= htmlspecialchars($car->getMake()); ?></td>
+            <td><?= htmlspecialchars($car->getModel()); ?></td>
+            <td>
+                <a href="/cars/<?= htmlspecialchars($car->getId()); ?>">Open</a>
+                <a href="/cars/<?= htmlspecialchars($car->getId()); ?>/edit">Edit</a>
+                <a href="/cars/<?= htmlspecialchars($car->getId()); ?>/delete">Delete</a>
+            </td>
+        </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>

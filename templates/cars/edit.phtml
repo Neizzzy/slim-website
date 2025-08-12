@@ -1,0 +1,25 @@
+<h1>Update Car</h1>
+<a href="/cars">Cars Page</a>
+<hr>
+<form action="/cars/<?= htmlspecialchars($car->getId()); ?>" method="post">
+    <input type="hidden" name="_METHOD" value="PATCH">
+    <div>
+        <label>
+            Make:
+            <input type="text" name="car[make]" value="<?= htmlspecialchars($car->getMake()); ?>">
+        </label>
+        <?php if (isset($errors['make'])): ?>
+            <div><?= $errors['make']; ?></div>
+        <?php endif; ?>
+    </div>
+    <div>
+        <label>
+            Model:
+            <input type="text" name="car[model]" value="<?= htmlspecialchars($car->getModel()); ?>">
+        </label>
+        <?php if (isset($errors['model'])): ?>
+            <div><?= $errors['model']; ?></div>
+        <?php endif; ?>
+    </div>
+    <input type="submit" value="Update car">
+</form>

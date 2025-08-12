@@ -1,0 +1,24 @@
+<h1>New Car</h1>
+<a href="/cars">Cars Page</a>
+<hr>
+<form action="/cars" method="post">
+    <div>
+        <label>
+            Make:
+            <input type="text" name="car[make]" value="<?= htmlspecialchars($car['make']); ?>">
+        </label>
+        <?php if (isset($errors['make'])): ?>
+            <div><?= $errors['make']; ?></div>
+        <?php endif; ?>
+    </div>
+    <div>
+        <label>
+            Model:
+            <input type="text" name="car[model]" value="<?= htmlspecialchars($car['model']); ?>">
+        </label>
+        <?php if (isset($errors['model'])): ?>
+            <div><?= $errors['model']; ?></div>
+        <?php endif; ?>
+    </div>
+    <input type="submit" value="Create car">
+</form>
