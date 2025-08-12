@@ -2,14 +2,11 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use App\Repository\UserRepository;
 use App\Validator\UserValidator;
 use DI\Container;
 use Slim\Factory\AppFactory;
 use Slim\Middleware\MethodOverrideMiddleware;
-use Slim\Routing\RouteCollectorProxy;
 use Slim\Views\PhpRenderer;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
