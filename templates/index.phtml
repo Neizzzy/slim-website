@@ -13,6 +13,11 @@
 
 <?php if (!$isAuth): ?>
     <h2>Sign In</h2>
+    <details>
+        <summary>Show email</summary>
+        admin@neizzzy.ru
+    </details>
+    <br>
     <form action="/login" method="post">
         <div>
             <label>
@@ -24,6 +29,8 @@
     </form>
 <?php else: ?>
     <a href="/users">Users Page</a>
+    <br>
+    <a href="/cars">Cars Page</a>
     <hr>
     <form action="/logout" method="post">
         <input type="hidden" name="_METHOD" value="DELETE">
