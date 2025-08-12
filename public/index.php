@@ -2,6 +2,9 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
+use App\Car;
+use App\CarRepository;
+use App\Validator\CarValidator;
 use App\Validator\UserValidator;
 use DI\Container;
 use Slim\Factory\AppFactory;
@@ -184,7 +187,7 @@ $app->group('/users', function (RouteCollectorProxy $users) use ($router) {
             return $response->write('User not found!')->withStatus(404);
         }
 
-        $validator = new UserValidator;
+        $validator = new UserValidator();
         $errors = $validator->validate($userData);
 
         if (count($errors) === 0) {
@@ -231,6 +234,123 @@ $app->group('/users', function (RouteCollectorProxy $users) use ($router) {
         return $response->withHeader('Set-Cookie', "users={$encodedUsers};path=/")
             ->withRedirect($router->urlFor('users.index'), 302);
     })->setName('users.destroy');
+})->add($authMiddleware);
+
+$app->group('/cars', function (RouteCollectorProxy $cars) use ($router) {
+    $cars->get('', function ($request, $response) {
+        $messages = $this->get('flash')->getMessages();
+        $cars = $this->get(CarRepository::class)->all();
+
+        $params = ['cars' => $cars, 'flash' => $messages];
+        return $this->get('renderer')->render($response, 'cars/index.phtml', $params);
+    })->setName('cars.index');
+
+    $cars->get('/new', function ($request, $response) {
+        $params = [
+            'car' => [
+                'make' => '',
+                'model' => ''
+            ],
+            'errors' => []
+        ];
+        return $this->get('renderer')->render($response, 'cars/new.phtml', $params);
+    })->setName('cars.create');
+
+    $cars->post('', function ($request, $response) use ($router) {
+        $carData = $request->getParsedBodyParam('car');
+        $validator = new CarValidator();
+        $errors = $validator->validate($carData);
+
+        if (count($errors) === 0) {
+            $car = Car::fromArray($carData);
+            $this->get(CarRepository::class)->save($car);
+            $this->get('flash')->addMessage('success', 'Car was added successfully');
+
+            return $response->withRedirect($router->urlFor('cars.index'), 302);
+        }
+
+        $params = [
+            'car' => $carData,
+            'errors' => $errors
+        ];
+        return $this->get('renderer')->render($response->withStatus(422), 'cars/new.phtml', $params);
+    })->setName('cars.store');
+
+    $cars->get('/{id}', function ($request, $response, array $args) {
+        $id = $args['id'];
+        $car = $this->get(CarRepository::class)->find($id);
+        if (!$car) {
+            return $response->write('Car not found!')->withStatus(404);
+        }
+
+        $params = ['car' => $car];
+        return $this->get('renderer')->render($response, 'cars/show.phtml', $params);
+    })->setName('cars.show');
+
+    $cars->get('/{id}/edit', function ($request, $response, array $args) {
+        $id = $args['id'];
+        $car = $this->get(CarRepository::class)->find($id);
+        if (!$car) {
+            return $response->write('Car not found!')->withStatus(404);
+        }
+
+        $params = [
+            'car' => $car,
+            'errors' => []
+        ];
+        return $this->get('renderer')->render($response, 'cars/edit.phtml', $params);
+    })->setName('cars.edit');
+
+    $cars->patch('/{id}', function ($request, $response, array $args) use ($router) {
+        $id = $args['id'];
+        $carData = $request->getParsedBodyParam('car');
+
+        $car = $this->get(CarRepository::class)->find($id);
+        if (!$car) {
+            return $response->write('Car not found!')->withStatus(404);
+        }
+
+        $validator = new CarValidator();
+        $errors = $validator->validate($carData);
+
+        if (count($errors) === 0) {
+            $car->setMake($carData['make']);
+            $car->setModel($carData['model']);
+            $this->get(CarRepository::class)->save($car);
+
+            $this->get('flash')->addMessage('success', 'Car was updated successfully');
+
+            return $response->withRedirect($router->urlFor('cars.index'), 302);
+        }
+
+        $params = [
+            'car' => $car,
+            'errors' => $errors
+        ];
+        return $this->get('renderer')->render($response->withStatus(422), 'cars/edit.phtml', $params);
+    })->setName('cars.update');
+
+    $cars->get('/{id}/delete', function ($request, $response, array $args) {
+        $id = $args['id'];
+        $car = $this->get(CarRepository::class)->find($id);
+        if (!$car) {
+            return $response->write('Car not found!')->withStatus(404);
+        }
+
+        $params = [
+            'car' => $car
+        ];
+        return $this->get('renderer')->render($response, 'cars/delete.phtml', $params);
+    })->setName('cars.delete');
+
+    $cars->delete('/{id}', function ($request, $response, array $args) use ($router) {
+        $id = $args['id'];
+        $this->get(CarRepository::class)->delete($id);
+
+        $this->get('flash')->addMessage('success', 'Car was deleted successfully');
+
+        return $response->withRedirect($router->urlFor('cars.index'), 302);
+    })->setName('cars.destroy');
 })->add($authMiddleware);
 
 $app->run();
