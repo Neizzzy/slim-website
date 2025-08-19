@@ -11,6 +11,7 @@ ____
 ____
 ```
 make setup
-make install
+make start or make start-local
 ```
+
 Open in browser: http://localhost:8000
